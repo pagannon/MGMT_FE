@@ -1,0 +1,55 @@
+﻿@page "/MappingModels"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using OTD.MappingService.ConfigUI.Components
+@using OTD.MappingService.ConfigUI.Services.API
+@using OTD.MappingService.Domain.Model.Models.DTOs
+@attribute [Authorize]
+@inject IMappingModelConfigService mappingModelConfigService
+
+<PageTitle>Mapping Models</PageTitle>
+
+<MudContainer>
+    <MudTable Items="@mappingModelConfigs" Dense="true" Hover="true" Bordered="true" Striped="true" loading="@isLoading">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Mapping Models</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col style="width:80px" />
+            <col style="width:80px" />
+            <col style="width:80px" />
+            <col />
+            <col style="width:140px" />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<MappingModel, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MappingModel, object>(x=>x.AppInstanceId)">AppInstance</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MappingModel, object>(x=>x.TargetId)">Target</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MappingModel, object>(x=>x.MappingModelTypeId)">Type</MudTableSortLabel></MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="AppInstanceId">@context.AppInstanceId</MudTd>
+            <MudTd DataLabel="TargetId">@context.TargetId</MudTd>
+            <MudTd DataLabel="Type">@context.MappingModelTypeId</MudTd>
+                <MudTd DataLabel="Actions" Style="text-align:right;">
+                <MudIconButton Color="Color.Warning" Icon="@Icons.Material.Filled.Edit" />
+                <MudIconButton Color="Color.Error"  Icon="@Icons.Material.Filled.Delete" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] {10,15,20,25}" />
+        </PagerContent>
+    </MudTable>
+ </MudContainer>
+
+@code {
+    private bool isLoading = true;
+    private IEnumerable<MappingModel> mappingModelConfigs = new List<MappingModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        mappingModelConfigs = await mappingModelConfigService.GetAll();
+        isLoading = false;
+    }
+}
