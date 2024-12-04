@@ -1,0 +1,82 @@
+﻿@page "/TransformationFlows"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using OTD.MappingService.ConfigUI.Components
+@using OTD.MappingService.ConfigUI.Services.API
+@using OTD.MappingService.Domain.Model.Models.DTOs
+@attribute [Authorize]
+@inject ITransformationFlowConfigService transformationFlowConfigService
+
+<PageTitle>Transformation Flows</PageTitle>
+
+<MudContainer>
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (errorMessage != null)
+    {
+        <MudText Typo="Typo.h6" Color="Color.Error">@errorMessage</MudText>
+    }
+    else
+    {
+        <MudTable Items="@transformationFlowConfigs" Dense="true" Hover="true" Bordered="true" Striped="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Transformation Flows</MudText>
+            </ToolBarContent>
+            <ColGroup>
+                <col style="width:80px" />
+                <col style="width:80px" />
+                <col />
+                <col style="width:80px" />
+                <col style="width:140px" />
+            </ColGroup>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<TransformationFlow, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<TransformationFlow, object>(x=>x.AppInstanceId)">AppInstanceId</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<TransformationFlow, object>(x=>x.TransformationFlowStepId)">TransformationFlowStepId</MudTableSortLabel></MudTh>
+                <MudTh>Order</MudTh>
+                <MudTh Style="text-align:center;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Id">@context.Id</MudTd>
+                <MudTd DataLabel="MappingModelId">@context.AppInstanceId</MudTd>
+                <MudTd DataLabel="FlowStep">@context.TransformationFlowStepId</MudTd>
+                <MudTd DataLabel="Type">@context.Order</MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align:center;">
+                    <MudIconButton Color="Color.Warning" Icon="@Icons.Material.Filled.Edit" />
+                    <MudIconButton Color="Color.Error"  Icon="@Icons.Material.Filled.Delete" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] {10,15,20,25}" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private bool isLoading = true;
+    private string? errorMessage = null;
+    
+    private IEnumerable<TransformationFlow> transformationFlowConfigs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            transformationFlowConfigs = await transformationFlowConfigService.GetAll();
+            if (transformationFlowConfigs == null)
+            {
+                transformationFlowConfigs = new List<TransformationFlow>();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading transformation flows: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

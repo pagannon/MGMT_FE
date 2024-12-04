@@ -1,0 +1,25 @@
+﻿@page "/authentication/{action}"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.Extensions.Configuration
+@using OTD.MappingService.ConfigUI.Constants
+
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+
+<RemoteAuthenticatorView Action="@Action">
+    <LogOut>
+        @{
+            Logout();
+        }
+    </LogOut>
+</RemoteAuthenticatorView>
+
+@code {
+    [Parameter] public string Action { get; set; }
+    private void Logout()
+    {
+        var authority = Settings.Auth0.Domain;
+        var clientId = Settings.Auth0.ClientId;
+        Navigation.NavigateTo($"{authority}/v2/logout?client_id={clientId}");
+    }
+}

@@ -1,0 +1,94 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using OTD.MappingService.ConfigUI.Components
+@using OTD.MappingService.ConfigUI.Services.API
+@using OTD.MappingService.Domain.Model.Models.DTOs
+@attribute [Authorize]
+@inject IDialogService DialogService
+@inject ITransformationConfigService transformationConfigService
+
+<PageTitle>Transformations Service</PageTitle>
+
+<MudContainer>
+    <MudTable Items="@transformationConfigs" Dense="true" Hover="true" Bordered="true" Striped="true" loading="@isLoading">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Transformations</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col style="width:80px" />
+            <col style="width:80px" />
+            <col />
+            <col />
+            <col style="width:80px" />
+            <col style="width:80px" />
+            <col style="width:140px" />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<Transformation, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Transformation, object>(x=>x.MappingModelId)">MMId</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Transformation, object>(x=>x.TransformationFlowStepId)">FlowStep</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Transformation, object>(x=>x.TransformationTypeId)">Type</MudTableSortLabel></MudTh>
+            <MudTh>Script</MudTh>
+            <MudTh Style="text-align:center;"><MudTableSortLabel SortBy="new Func<Transformation, object>(x=>x.IsDeleted)">Active?</MudTableSortLabel></MudTh>
+            <MudTh Style="text-align:center;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="MappingModelId">@context.MappingModelId</MudTd>
+            <MudTd DataLabel="FlowStep">@context.TransformationFlowStepId</MudTd>
+            <MudTd DataLabel="Type">@context.TransformationTypeId</MudTd>
+            <MudTd DataLabel="Script">
+                <MudIconButton Icon="@Icons.Material.Filled.ViewCozy" OnClick="() => OpenDialogAsync(context.Script)" />
+            </MudTd>
+                <MudTd DataLabel="Active?" Style="text-align:center;">
+                @if (context.IsDeleted)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Block" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Check" />
+                }
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align:center;">
+                <MudIconButton Color="Color.Warning" Icon="@Icons.Material.Filled.Edit" />
+                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] {10,15,20,25}" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private bool isLoading = true;
+    private IEnumerable<Transformation> transformationConfigs = new List<Transformation>();
+    private HashSet<Transformation> selectedItems = new HashSet<Transformation>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            transformationConfigs = await transformationConfigService.GetAll();
+        }
+        catch(Exception exc)
+        {
+            Console.WriteLine(exc);
+        }
+        finally
+        {
+            isLoading = false;
+        }   
+    }
+
+    private Task OpenDialogAsync(string script)
+    {
+        var parameters = new DialogParameters<TransformationScriptDialog>
+        {
+            { x => x.ContentText, script }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        return DialogService.ShowAsync<TransformationScriptDialog>("Script Dialog", parameters, options);
+    }
+}

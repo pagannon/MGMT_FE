@@ -1,0 +1,52 @@
+﻿@page "/AppInstances"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using OTD.MappingService.ConfigUI.Components
+@using OTD.MappingService.ConfigUI.Services.API
+@using OTD.MappingService.Domain.Model.Models.DTOs
+@attribute [Authorize]
+@inject IAppInstanceConfigService appInstanceConfigService
+
+<PageTitle>App Instances</PageTitle>
+
+<MudContainer>
+    <MudTable Items="@appInstanceConfigs" Dense="true" Hover="true" Bordered="true" Striped="true" loading="@isLoading">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">App Instances</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col style="width:80px" />
+            <col style="width:80px" />
+            <col />
+            <col style="width:140px" />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<AppInstance, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<AppInstance, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+            <MudTh>Instance Key</MudTh>
+            <MudTh Style="text-align:center;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Instance Key">@context.InstanceKey</MudTd>
+            <MudTd DataLabel="Actions" Style="text-align:center;">
+                <MudIconButton Color="Color.Warning" Icon="@Icons.Material.Filled.Edit" />
+                <MudIconButton Color="Color.Error"  Icon="@Icons.Material.Filled.Delete" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] {10,15,20,25}" />
+        </PagerContent>
+    </MudTable>
+ </MudContainer>
+
+@code {
+    private bool isLoading = true;
+    private IEnumerable<AppInstance> appInstanceConfigs = new List<AppInstance>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        appInstanceConfigs = await appInstanceConfigService.GetAll();
+        isLoading = false;
+    }
+}
