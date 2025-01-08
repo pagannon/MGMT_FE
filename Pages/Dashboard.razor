@@ -1,0 +1,142 @@
+@page "/Dashboard"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using OTD.MappingService.ConfigUI.Services.API
+@using OTD.MappingService.Domain.Model.Models.DTOs
+@attribute [Authorize]
+@inject IAppInstanceConfigService appInstanceConfigService
+@inject IMappingModelConfigService mappingModelConfigService
+@inject ITransformationConfigService transformationConfigService
+@inject ITransformationFlowConfigService transformationFlowConfigService
+
+<PageTitle>Dashboard</PageTitle>
+
+<MudContainer>
+    <MudText Typo="Typo.h4">Dashboard</MudText>
+    <MudProgressCircular Indeterminate="true" @bind-Visible="@isLoading" />
+
+    @if (!isLoading)
+    {
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">App Instances</MudText>
+                        <MudTable Items="@appInstanceConfigs" Dense="true" Hover="true" Bordered="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Id</MudTh>
+                                <MudTh>Name</MudTh>
+                                <MudTh>Instance Key</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Id">@context.Id</MudTd>
+                                <MudTd DataLabel="Name">@context.Name</MudTd>
+                                <MudTd DataLabel="Instance Key">@context.InstanceKey</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">Mapping Models</MudText>
+                        <MudTable Items="@mappingModelConfigs" Dense="true" Hover="true" Bordered="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Id</MudTh>
+                                <MudTh>AppInstance</MudTh>
+                                <MudTh>Target</MudTh>
+                                <MudTh>Type</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Id">@context.Id</MudTd>
+                                <MudTd DataLabel="AppInstanceId">@context.AppInstanceId</MudTd>
+                                <MudTd DataLabel="TargetId">@context.TargetId</MudTd>
+                                <MudTd DataLabel="Type">@context.MappingModelTypeId</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">Transformations</MudText>
+                        <MudTable Items="@transformationConfigs" Dense="true" Hover="true" Bordered="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Id</MudTh>
+                                <MudTh>MMId</MudTh>
+                                <MudTh>FlowStep</MudTh>
+                                <MudTh>Type</MudTh>
+                                <MudTh>Script</MudTh>
+                                <MudTh>Active?</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Id">@context.Id</MudTd>
+                                <MudTd DataLabel="MappingModelId">@context.MappingModelId</MudTd>
+                                <MudTd DataLabel="FlowStep">@context.TransformationFlowStepId</MudTd>
+                                <MudTd DataLabel="Type">@context.TransformationTypeId</MudTd>
+                                <MudTd DataLabel="Script">@context.Script</MudTd>
+                                <MudTd DataLabel="Active?">@context.IsDeleted</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">Transformation Flows</MudText>
+                        <MudTable Items="@transformationFlowConfigs" Dense="true" Hover="true" Bordered="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Id</MudTh>
+                                <MudTh>AppInstanceId</MudTh>
+                                <MudTh>TransformationFlowStepId</MudTh>
+                                <MudTh>Order</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Id">@context.Id</MudTd>
+                                <MudTd DataLabel="AppInstanceId">@context.AppInstanceId</MudTd>
+                                <MudTd DataLabel="TransformationFlowStepId">@context.TransformationFlowStepId</MudTd>
+                                <MudTd DataLabel="Order">@context.Order</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private bool isLoading = true;
+    private IEnumerable<AppInstance> appInstanceConfigs = new List<AppInstance>();
+    private IEnumerable<MappingModel> mappingModelConfigs = new List<MappingModel>();
+    private IEnumerable<Transformation> transformationConfigs = new List<Transformation>();
+    private IEnumerable<TransformationFlow> transformationFlowConfigs = new List<TransformationFlow>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var appInstancesTask = appInstanceConfigService.GetAll();
+            var mappingModelsTask = mappingModelConfigService.GetAll();
+            var transformationsTask = transformationConfigService.GetAll();
+            var transformationFlowsTask = transformationFlowConfigService.GetAll();
+
+            await Task.WhenAll(appInstancesTask, mappingModelsTask, transformationsTask, transformationFlowsTask);
+
+            appInstanceConfigs = appInstancesTask.Result;
+            mappingModelConfigs = mappingModelsTask.Result;
+            transformationConfigs = transformationsTask.Result;
+            transformationFlowConfigs = transformationFlowsTask.Result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
